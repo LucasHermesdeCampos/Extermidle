@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Exterdle</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Exterdle [BETA]</h1>
+    <p class="subtitle">Adivinhe o personagem do dia</p>
+
+    <div id="victoryBanner" class="victory hidden"></div>
+
+    <div class="attempt-bar" id="attemptBar"></div>
+
+    <div class="input-area">
+      <input id="guessInput" placeholder="Digite o nome do personagem..." autocomplete="off">
+      <div id="suggestions" class="suggestions"></div>
+      <button id="guessBtn">Chutar</button>
+    </div>
+
+    <!-- TABULEIRO CORRIGIDO -->
+    <div class="board-wrapper">
+      <div class="header-row">
+        <div>Nome</div>
+        <div>Gênero</div>
+        <div>Status</div>
+        <div>Classe</div>
+        <div>Origem</div>
+        <div>Associação</div>
+        <div>Idade</div>
+        <div>NEX</div>
+      </div>
+
+      <div id="board" class="board"></div>
+    </div>
+
+    <button id="shareBtn" class="share hidden">Compartilhar resultado</button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
