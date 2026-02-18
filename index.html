@@ -1,44 +1,2032 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Exterdle</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EXTERDLE [BETATEST]</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #ffffff;
+            --text-muted: #a0a0a0;
+            --border: #333333;
+            
+            --correct: #2e7d32;
+            --correct-hover: #1b5e20;
+            --absent: #c62828;
+            --absent-hover: #8e0000;
+            --unknown: #424242;
+            
+            --accent: #e52e71;
+            --input-bg: #2c2c2e;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding-bottom: 40px;
+        }
+
+        header {
+            width: 100%;
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: var(--bg-color);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: var(--text-color);
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 5px;
+            font-weight: 400;
+        }
+
+        .date-display {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-top: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .target-area {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin-bottom: 10px;
+        }
+
+        .target-image-container {
+            width: 200px;
+            height: 200px;
+            background: #000;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+            font-size: 4rem;
+            border: 2px solid var(--border);
+            transition: all 0.5s ease;
+            overflow: hidden;
+        }
+
+        .target-image-revealed {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .target-image-correct {
+            border-color: var(--correct);
+            box-shadow: 0 0 30px rgba(46, 125, 50, 0.4);
+        }
+
+        .target-image-wrong {
+            border-color: var(--absent);
+            box-shadow: 0 0 30px rgba(198, 40, 40, 0.4);
+        }
+
+        .target-name {
+            margin-top: 15px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            display: none;
+            text-transform: uppercase;
+        }
+
+        .lives-container {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 20px;
+            padding: 0 20px;
+        }
+
+        .life-bar {
+            width: 100%;
+            max-width: 40px;
+            height: 12px;
+            background: var(--correct);
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .life-bar.lost {
+            background: var(--absent);
+            opacity: 0.4;
+        }
+
+        .success-banner {
+            width: 100%;
+            max-width: 600px;
+            background: var(--correct);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: none;
+            animation: slideDown 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 1000px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .input-section {
+            width: 100%;
+            max-width: 700px;
+            margin: 0 auto 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            flex: 1;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 16px;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            background: var(--input-bg);
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            color: white;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--text-muted);
+        }
+
+        .btn-guess {
+            padding: 16px 32px;
+            background: var(--text-color);
+            color: var(--bg-color);
+            border: none;
+            border-radius: 4px;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+
+        .btn-guess:hover {
+            background: #ddd;
+            transform: translateY(-2px);
+        }
+
+        .suggestions-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 0 0 4px 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 20;
+            display: none;
+        }
+
+        .suggestions-list.active { display: block; }
+
+        .suggestion-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+        }
+
+        .suggestion-item:hover { background: #333; }
+        .suggestion-item:last-child { border-bottom: none; }
+
+        .guesses-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .guess-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            animation: slideUp 0.3s ease-out;
+            display: flex;
+            gap: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        @media (max-width: 767px) {
+            .guess-card {
+                flex-direction: column;
+            }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .guess-image-container {
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            width: 120px;
+        }
+
+        .guess-image {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 2px solid var(--border);
+            margin-bottom: 10px;
+        }
+
+        .guess-image.correct { border-color: var(--correct); }
+        .guess-image.wrong { border-color: var(--absent); }
+
+        .guess-result-icon {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .guess-result-icon.correct { color: var(--correct); }
+        .guess-result-icon.wrong { color: var(--absent); }
+
+        .guess-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .guess-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+            margin-bottom: 5px;
+        }
+
+        .guess-name { 
+            font-size: 1.4rem; 
+            font-weight: 800; 
+            color: var(--text-color);
+            text-transform: uppercase;
+        }
+
+        .guess-quote { 
+            font-style: italic; 
+            color: var(--text-muted); 
+            font-size: 0.9rem; 
+            margin-bottom: 5px; 
+            display: block;
+        }
+
+        .attribute-section {
+            margin-bottom: 8px;
+        }
+
+        .group-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .attribute-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: white;
+            letter-spacing: 0.5px;
+        }
+
+        .tag.correct {
+            background-color: var(--correct);
+        }
+
+        .tag.absent {
+            background-color: var(--absent);
+        }
+
+        .tag.unknown {
+            background-color: var(--unknown);
+            color: #ccc;
+        }
+
+        .tag-icon {
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+        .modal-content {
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 8px;
+            max-width: 90%;
+            width: 450px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .modal-title {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .modal-title.correct { color: var(--correct); }
+        .modal-title.wrong { color: var(--absent); }
+
+        .modal-image {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin: 20px auto;
+            border: 2px solid var(--border);
+        }
+
+        .modal-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            background: var(--text-color);
+            color: var(--bg-color);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 4px;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+
+        .btn:hover { 
+            background: #ddd;
+            transform: translateY(-2px);
+        }
+
+        .btn-copy {
+            background: var(--correct);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-copy:hover {
+            background: var(--correct-hover);
+        }
+
+        .btn-reset {
+            background: transparent;
+            border: 2px solid var(--border);
+            color: var(--text-color);
+        }
+
+        .btn-reset:hover {
+            background: var(--border);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--card-bg);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            z-index: 200;
+            animation: fadeInOut 2s ease;
+            font-weight: 600;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            10% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            90% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); }
+        ::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Exterdle [BETA]</h1>
-    <p class="subtitle">Adivinhe o personagem do dia</p>
 
-    <div id="victoryBanner" class="victory hidden"></div>
+    <header>
+        <h1>EXTERDLE BETATEST</h1>
+        <div class="subtitle">Adivinhe o personagem do dia</div>
+        <div class="date-display" id="dateDisplay"></div>
+    </header>
 
-    <div class="attempt-bar" id="attemptBar"></div>
-
-    <div class="input-area">
-      <input id="guessInput" placeholder="Digite o nome do personagem..." autocomplete="off">
-      <div id="suggestions" class="suggestions"></div>
-      <button id="guessBtn">Chutar</button>
+    <div class="target-area">
+        <div class="target-image-container" id="targetImageContainer">?</div>
+        <h2 class="target-name" id="targetNameReveal"></h2>
     </div>
 
-    <!-- TABULEIRO CORRIGIDO -->
-    <div class="board-wrapper">
-      <div class="header-row">
-        <div>Nome</div>
-        <div>Gênero</div>
-        <div>Status</div>
-        <div>Classe</div>
-        <div>Origem</div>
-        <div>Associação</div>
-        <div>Idade</div>
-        <div>NEX</div>
-      </div>
-
-      <div id="board" class="board"></div>
+    <div class="lives-container" id="livesContainer">
     </div>
 
-    <button id="shareBtn" class="share hidden">Compartilhar resultado</button>
-  </div>
+    <div class="success-banner" id="successBanner">
+        ✓ Você acertou o personagem do dia!
+    </div>
 
-  <script src="script.js"></script>
+    <div class="game-container">
+        <div style="width: 100%;">
+            <div class="input-section">
+                <div class="input-wrapper">
+                    <input type="text" id="guessInput" placeholder="Digite o nome do personagem..." autocomplete="off">
+                    <div class="suggestions-list" id="suggestionsList"></div>
+                </div>
+                <button class="btn-guess" id="guessBtn">Chutar</button>
+            </div>
+
+            <div class="guesses-container" id="guessesContainer">
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="endModal">
+        <div class="modal-content">
+            <h2 class="modal-title" id="endTitle"></h2>
+            <p id="endMessage" style="color: var(--text-muted); margin-bottom: 20px;"></p>
+            <img src="" class="modal-image" id="modalImage">
+            <div class="modal-buttons">
+                <button class="btn btn-copy" id="copyBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    Copiar Resultado
+                </button>
+                <button class="btn btn-reset" onclick="closeModal()">Voltar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CHARACTER_DATABASE = [
+            {
+                id: 1,
+                nome: "Alfredo Alipio de Freitas",
+                frase: "Se este rato ficar em nosso caminho, então seremos a Equipe Exterminio!",
+                idade: 33,
+                genero: "Masculino",
+                status: "Vivo",
+                elemento: "Enclausurado",
+                classe: "Especialista",
+                origem: "Religioso",
+                trilha: "Negociador",
+                ocupacoes: ["Neurocirugião", "Médico", "Padre", "Político", "Líder", "Investigador Paranormal"],
+                associacoes: ["Ordo Realitas", "Equipe OS", "Equpe Exterminio"],
+                aparece_em: ["Voo da Morte", "Restaurante em Sangue", "Evolução à Chamas", "Amigos Preocupados", "Prove-se", "Terapia de Choque", "Jogos de Luto", "Brumas de Vento Baixo", "Rei da Pizza", "Regressão"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/e/ed/Alfredo_Alipio.jpg/revision/latest?cb=20240305185855&path-prefix=pt-br"
+            },
+            {
+                id: 2,
+                nome: "Benedito Vitor Peixoto de Freitas",
+                frase: "Fazer parte da Ordem é uma maldição.",
+                idade: 18,
+                genero: "Masculino",
+                status: "Vivo",
+                elemento: "Morte",
+                classe: "Ocultista",
+                origem: "Cultista Arrependido",
+                trilha: "Conduíte",
+                ocupacoes: ["Ocultista", "Investigador Paranormal", "Pesquisador Paranormal","Praticante de Ocultismo"],
+                associacoes: ["Ordo Realitas", "Equipe OS", "Equpe Exterminio"],
+                aparece_em: ["Voo da Morte", "Restaurante em Sangue", "Evolução à Chamas", "Amigos Preocupados", "Prove-se", "Terapia de Choque", "Brumas de Vento Baixo", "Rei da Pizza", "Regressão"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/f/f7/Benedito_Peixoto.jpg/revision/latest/scale-to-width-down/268?cb=20240305200819&path-prefix=pt-br"
+            },
+            {
+                id: 3,
+                nome: "Eric Sharp",
+                frase: "Tá... Agora devolve meu chapéu?",
+                idade: 31,
+                genero: "Masculino",
+                status: "Vivo",
+                elemento: "Conhecimento",
+                classe: "Ocultista",
+                origem: "Teórico da Conspiração",
+                trilha: "Intuitivo",
+                ocupacoes: ["Magnata", "Investidor", "Magnata", "Líder", "Investigador Paranormal", "Praticante de Ocultismo", "Recrutador da Ordem"],
+                associacoes: ["Ordo Realitas", "Equipe OS", "Equpe Exterminio"],
+                aparece_em: ["Voo da Morte", "Rei da Pizza", "Regressão", "Orfanato de Sussurros", "Noite de Compras", "Fumaça Púrpura"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/8/84/Eric_Sharp.jpg/revision/latest/scale-to-width-down/268?cb=20240305201039&path-prefix=pt-br"
+            },
+            {
+                id: 4,
+                nome: "Felipe Kiefer",
+                frase: "Então não foi um sonho?	",
+                idade: 30,
+                genero: "Masculino",
+                status: "Vivo",
+                elemento: "Sangue",
+                classe: "Combatente",
+                origem: "Operário",
+                trilha: "Aniquilador",
+                ocupacoes: ["Lenhador", "Investigador Paranormal"],
+                associacoes: ["Ordo Realitas", "Equipe OS", "Equpe Exterminio"],
+                aparece_em: ["Voo da Morte", "Amigos Preocupados", "Prove-se", "Terapia de Choque", "Jogos de Luto", "Brumas de Vento Baixo", "Rei da Pizza", "Regressão", "Tramontana"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/b/b6/Felipe_Kiefer.jpg/revision/latest/scale-to-width-down/268?cb=20240306032823&path-prefix=pt-br"
+            },
+            {
+                id: 5,
+                nome: "Luís",
+                frase: "...",
+                idade: 32,
+                genero: "Masculino",
+                status: "Desconhecido",
+                elemento: "Energia",
+                classe: "Especialista",
+                origem: "Militar",
+                trilha: "Atirador de Elite",
+                ocupacoes: ["Franco-atirador", "Investigador Paranormal"],
+                associacoes: ["Ordo Realitas", "Equipe OS"],
+                aparece_em: ["Evolução à Chamas", "Amigos Preocupados", "Prove-se"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/8/81/Perfil_-_Luis.jpg/revision/latest/scale-to-width-down/268?cb=20240402180110&path-prefix=pt-br"
+            },
+            {
+                id: 6,
+                nome: "Renata de Sales",
+                frase: "ANDA! Não fica parado!	",
+                idade: 27,
+                genero: "Feminino",
+                status: "Falecido",
+                elemento: null,
+                classe: "Combatente",
+                origem: "Policial",
+                trilha: "Operações Especiais",
+                ocupacoes: ["Militar", "Policial", "Investigador Paranormal"],
+                associacoes: ["Exercítod dos Estados Unidos", "Ordo Realitas", "Equipe OS"],
+                aparece_em: ["Voo da Morte", "Restaurante em Sangue", "Evolução à Chamas", "Prove-se", "Terapia de Choque", "Jogos de Luto", "Brumas de Vento Baixo"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/a/a0/Renata_de_Sales.jpg/revision/latest/scale-to-width-down/268?cb=20240306032657&path-prefix=pt-br"
+            },
+            {
+                id: 7,
+                nome: "Sebastião Cavalcanti",
+                frase: "Por favor, eu não sei quantos sobreviveram desta vez, então não façam meus sacrifícios se esvaírem em vão.",
+                idade: null,
+                genero: "Masculino",
+                status: "Falecido",
+                elemento: "Energia",
+                classe: "Ocultista",
+                origem: "Acadêmico",
+                trilha: "Conduíte",
+                ocupacoes: ["Professor", "Escritor", "Empresário", "Investigador Paranormal", "Praticante de Ocultismo"],
+                associacoes: ["Ordo Realitas", "Equipe OS"],
+                aparece_em: ["Prove-se", "Terapia de Choque", "Regressão"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/b/b8/Sebastiao_Cavalcanti.jpg/revision/latest/scale-to-width-down/268?cb=20240308171801&path-prefix=pt-bre"
+            },
+            {
+                id: 8,
+                nome: "Victor Vicente",
+                frase: "...",
+                idade: 25,
+                genero: "Masculino",
+                status: "Vivo",
+                elemento: "Sangue",
+                classe: "Ocultista",
+                origem: "Cultista Arrependido",
+                trilha: "Graduado",
+                ocupacoes: ["Cultista", "Investigador Paranormal", "Praticante de Ocultismo"],
+                associacoes: ["Ordo Realitas", "Equpe OS"],
+                aparece_em: ["Voo da Morte", "Restaurante em Sangue", "Evolução à Chamas", "Terapia de Choque"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/f/fd/Perfil_-_Victor_Vicente.jpg/revision/latest/scale-to-width-down/268?cb=20240405220145&path-prefix=pt-br"
+            },
+            {
+                id: 9,
+                nome: "Zack",
+                frase: "Não se aproxima! Eu lido com este.",
+                idade: null,
+                genero: "Masculino",
+                status: "Vivo",
+                elemento: null,
+                classe: "Combatente",
+                origem: "Artista",
+                trilha: "Tropa de Choque",
+                ocupacoes: ["Guitarrista", "Investigador Paranormal"],
+                associacoes: ["Ordo Realitas", "Equipe OS"],
+                aparece_em: ["Restaurante em Sangue"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/4/41/Zach.jpg/revision/latest/scale-to-width-down/268?cb=20240306032913&path-prefix=pt-br"
+            },
+            {
+                id: 10,
+                nome: "Alice Abernado",
+                frase: "...",
+                idade: 28,
+                genero: "Feminino",
+                status: "Vivo",
+                elemento: "Morte",
+                classe: "Combatente",
+                origem: "Experimento",
+                trilha: "Forças Armadas",
+                ocupacoes: ["Militar", "Investigador Paranormal"],
+                associacoes: ["Ordo Realitas", "Equipe M"],
+                aparece_em: ["Sementes da Discórdia"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/e/eb/Alice_Abernado_-_Portrait.png/revision/latest/scale-to-width-down/268?cb=20250126091635&path-prefix=pt-br"
+            },
+            {
+                id: 11,
+                nome: "Enio Bento",
+                frase: "Perdão, me enganei, num era um cervo não, era um macaco!	",
+                idade: 48,
+                genero: "Masculino",
+                status: "Vivo",
+                elemento: null,
+                classe: "Combatente",
+                origem: "Desgarrado",
+                trilha: "Tropa de Choque",
+                ocupacoes: ["Trabalhador Rural", "Fazendeiro", "Caçador", "Investigador Paranormal"],
+                associacoes: ["Ordo Realitas", "Equipe M"],
+                aparece_em: ["Os Espinhos da Aurora Escarlate", "Carga Mortal", "Sementes da Discórdia"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/c/cc/Enio_Bento_-_Token.png/revision/latest/scale-to-width-down/268?cb=20240320040822&path-prefix=pt-br"
+            },
+            {
+                id: 12,
+                nome: "Enio Neto Bento",
+                frase: "CALA A BOCA, FICA E AJUDA PORRA!!!",
+                idade: 17,
+                genero: "Masculino",
+                status: "Desconhecido",
+                elemento: null,
+                classe: "Ocultista",
+                origem: "Artista",
+                trilha: "Lâmina Paranormal",
+                ocupacoes: ["Podcaster", "Investigador Paranormal", "Praticante de Ocultismo"],
+                associacoes: ["Ordo Realitas", "Equipe M", "Equipe Resiliência"],
+                aparece_em: ["Os Espinhos da Aurora Escarlate", "Carga Mortal", "Radiação de Esperança","Sementes da Discórdia", "Brumas de Vento Baixo", "Fumaça Púrpura"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/e/e4/Miss%C3%A3o_0_-_%27Enio_Neto%27_1.png/revision/latest/scale-to-width-down/267?cb=20251207075216&path-prefix=pt-br"
+            },
+            {
+                id: 13,
+                nome: "Enio Filho Bento",
+                frase: "...",
+                idade: 34,
+                genero: "Masculino",
+                status: "Desconhecido",
+                elemento: null,
+                classe: null,
+                origem: null,
+                trilha: null,
+                ocupacoes: ["Praticante de Ocultismo"],
+                associacoes: ["Rei da Carne"],
+                aparece_em: ["Sementes da Discórdia"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/2/2f/Fotografia_-_Enio_Jr.png/revision/latest/scale-to-width-down/268?cb=20250127183754&path-prefix=pt-br"
+            },
+            {
+                id: 14,
+                nome: "Felipe Soarez",
+                frase: "...",
+                idade: 21,
+                genero: "Masculino",
+                status: "Falecido",
+                elemento: null,
+                classe: "Especialista",
+                origem: "Teórico da Conspiração",
+                trilha: "Técnico",
+                ocupacoes: ["Técnico", "Teórico da Conspiração", "Investigador Paranormal"],
+                associacoes: ["Casa de Helminto","Ordo Realitas", "Equipe M"],
+                aparece_em: ["Os Espinhos da Aurora Escarlate", "Carga Mortal", "Radiação de Esperança"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/8/81/Perfil_-_Felipe_Soarez.png/revision/latest/scale-to-width-down/150?cb=20240724171420&path-prefix=pt-br"
+            },
+            {
+                id: 15,
+                nome: "Lando Touden",
+                frase: "...",
+                idade: null,
+                genero: "Masculino",
+                status: "Falecido",
+                elemento: null,
+                classe: "Combatente",
+                origem: "Fanático por Criaturas",
+                trilha: "Vanguarda",
+                ocupacoes: ["Universitário", "Investigador Paranormal"],
+                associacoes: ["Ordo Realitas", "Equipe M"],
+                aparece_em: ["Radiação de Esperança"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/2/2c/Lando_Touden_-_Portrait.png/revision/latest/scale-to-width-down/268?cb=20250102044147&path-prefix=pt-br"
+            },
+            {
+                id: 16,
+                nome: "Luiz Ferreira",
+                frase: "...",
+                idade: 32,
+                genero: "Masculino",
+                status: "Desconhecido",
+                elemento: "Energia",
+                classe: "Especialista",
+                origem: "Militar",
+                trilha: "Atirador de Elite",
+                ocupacoes: ["Franco-atirador", "Investigador Paranormal"],
+                associacoes: ["Ordo Realitas", "Equipe M"],
+                aparece_em: ["Os Espinhos da Aurora Escarlate", "Carga Mortal"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/b/ba/Perfil_-_Luiz_Ferreira.png/revision/latest/scale-to-width-down/150?cb=20240402180514&path-prefix=pt-br"
+            },
+            {
+                id: 17,
+                nome: "Rogério Maciel",
+                frase: "...",
+                idade: 32,
+                genero: "Masculino",
+                status: "Vivo",
+                elemento: null,
+                classe: "Especialista",
+                origem: "Trambiqueiro",
+                trilha: "Negociador",
+                ocupacoes: ["Magnata", "Hacker", "Investigador Paranormal"],
+                associacoes: ["Família Maciel", "Ordo Realitas", "Equipe M"],
+                aparece_em: ["Os Espinhos da Aurora Escarlate", "Carga Mortal", "Raízes Sombrias"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/8/8d/Perfil_-_Rogerio_Maciel.png/revision/latest/scale-to-width-down/150?cb=20240402180859&path-prefix=pt-br"
+            },
+            {
+                id: 18,
+                nome: "Rafael Abreu Montes",
+                frase: "...",
+                idade: 29,
+                genero: "Masculino",
+                status: "Vivo",
+                elemento: null,
+                classe: "Combatente",
+                origem: "Militar",
+                trilha: "Operações Especiais",
+                ocupacoes: ["Militar", "Agente Federal", "Investigador Paranormal"],
+                associacoes: ["Exército dos Estados Unidos", "Hell Hunters", "Ordo Realitas", "Equipe M"],
+                aparece_em: ["Radiação de Esperança"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/e/e7/Rafael_Montes_-_Portrait_-_Galeria.png/revision/latest/scale-to-width-down/267?cb=20240720165135&path-prefix=pt-br"
+            },
+            {
+                id: 19,
+                nome: "Aizetsu",
+                frase: "...",
+                idade: null,
+                genero: "Masculino",
+                status: "Vivo",
+                elemento: null,
+                classe: "Ocultista",
+                origem: null,
+                trilha: null,
+                ocupacoes: ["Investigador Paranormal", "Pesquisador Paranormal", "Praticante de Ocultismo"],
+                associacoes: ["Clones", "Ordo Realitas", "Equipe Hades"],
+                aparece_em: ["Raízes Carmesim", "Sementes da Discórdia"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/8/83/Aizetsu_Perfil.png/revision/latest/scale-to-width-down/268?cb=20240308174451&path-prefix=pt-br"
+            },
+            {
+                id: 20,
+                nome: "Leoncio S. Kennedy",
+                frase: "Davi, quem não fez isso? Catarina ou Lúcia",
+                idade: 23,
+                genero: "Masculino",
+                status: "Vivo",
+                elemento: null,
+                classe: "Combatente",
+                origem: "Policial",
+                trilha: "Operações Especiais",
+                ocupacoes: ["Policial", "Investigador Paranormal"],
+                associacoes: ["BOPE", "Ordo Realitas", "Equipe Hades"],
+                aparece_em: ["Raízes Carmesim", "Raízes Sombrias"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/8/83/Leoncio_Perfil.png/revision/latest/scale-to-width-down/268?cb=20240309162540&path-prefix=pt-br"
+            },
+            {
+                id: 21,
+                nome: "Rafael Martins",
+                frase: "Resolvi o problema não resolvi?",
+                idade: 24,
+                genero: "Masculino",
+                status: "Vivo",
+                elemento: null,
+                classe: "Especialista",
+                origem: "Engenheiro",
+                trilha: "Técnic",
+                ocupacoes: ["Engenheiro", "Técnico", "Hacker", "Investigador Paranormal"],
+                associacoes: ["Ordo Realitas", "Equipe Hades"],
+                aparece_em: ["Raízes Sombrias"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/8/8c/Rafael_Martins_-_Perfil.png/revision/latest/scale-to-width-down/268?cb=20240526082536&path-prefix=pt-br"
+            },
+            {
+                id: 22,
+                nome: "Urami",
+                frase: "Então já podemos ir embora né?",
+                idade: null,
+                genero: "Masculino",
+                status: "Vivo",
+                elemento: null,
+                classe: "Combatente",
+                origem: "Cultista Arrependido",
+                trilha: "Aniquilador",
+                ocupacoes: ["Cantor", "Artesão", "Investigador Paranormal", "Praticante de Ocultismo"],
+                associacoes: ["Clones", "Ordo Realitas", "Equipe Hades"],
+                aparece_em: ["Raízes Carmesim", "Raízes Sombrias"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/3/3f/Urami_Perfil.png/revision/latest/scale-to-width-down/268?cb=20240309153347&path-prefix=pt-br"
+            },
+            {
+                id: 23,
+                nome: "Urogi",
+                frase: "...",
+                idade: null,
+                genero: "Masculino",
+                status: "Vivo",
+                elemento: null,
+                classe: "Ocultista",
+                origem: "Costureiro",
+                trilha: null,
+                ocupacoes: ["Investigador Paranormal"],
+                associacoes: ["Clones", "Ordo Realitas", "Equipe Hades"],
+                aparece_em: ["Raízes Carmesim", "Raízes Sombrias"],
+                imagem: "hhttps://static.wikia.nocookie.net/ordem-exterminio/images/5/55/Urogi_Perfil.png/revision/latest/scale-to-width-down/268?cb=20240309153726&path-prefix=pt-br"
+            },
+            {
+                id: 24,
+                nome: "Cristiano Torres",
+                frase: "...",
+                idade: 37,
+                genero: "Masculino",
+                status: "Vivo",
+                elemento: null,
+                classe: "Especialista",
+                origem: "Agente de Saúde",
+                trilha: "Médico de Campo",
+                ocupacoes: ["Médico", "Socorrista", "Investigador Paranormal"],
+                associacoes: ["Ordo Realitas", "Equipe Demolição"],
+                aparece_em: ["Orfanato de Sussurros", "Obsessão"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/1/12/Portrait_-_Cristiano_Torres.png/revision/latest/scale-to-width-down/117?cb=20250721163343&path-prefix=pt-br"
+            },
+            {
+                id: 25,
+                nome: "Bartolomeu Costa",
+                frase: "...",
+                idade: 24,
+                genero: "Masculino",
+                status: "Vivo",
+                elemento: "Sangue",
+                classe: "Combatente",
+                origem: "Experimento",
+                trilha: "Monstruoso",
+                ocupacoes: ["Cobaia", "Prisioneiro", "Investigador Paranormal"],
+                associacoes: ["Ordo Realitas", "Equipe Demolição"],
+                aparece_em: ["Obsessão"],
+                imagem: "hhttps://static.wikia.nocookie.net/ordem-exterminio/images/0/0d/Portrait_-_Bartolomeu_Costa.png/revision/latest/scale-to-width-down/268?cb=20250721164323&path-prefix=pt-br"
+            },
+            {
+                id: 26,
+                nome: "Hank Petrescu",
+                frase: "E se tudo isso esta vinculado com conhecimentos mágicos além da nossa compreensão? Quero dizer... uga buga!",
+                idade: 41,
+                genero: "Masculino",
+                status: "Vivo",
+                elemento: null,
+                classe: "Combatente",
+                origem: "Operário",
+                trilha: "Tropa de Choque",
+                ocupacoes: ["Mineiro", "Investigador Paranormal"],
+                associacoes: ["Ordo Realitas", "Equipe Demolição"],
+                aparece_em: ["Orfanato de Sussurros", "Obsessão"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/e/ed/Portrait_-_Hank_Petrescu.png/revision/latest/scale-to-width-down/268?cb=20241116164414&path-prefix=pt-br"
+            },
+            {
+                id: 27,
+                nome: "Malena Abramelo",
+                frase: "Sim, e eu vendi a PORRA da minha alma por causa de mulher!",
+                idade: 24,
+                genero: "Feminino",
+                status: "Vivo",
+                elemento: "Sangue",
+                classe: "Ocultista",
+                origem: "Universitário",
+                trilha: "Possuído",
+                ocupacoes: ["Universitário", "Guitarrista", "Artista", "Investigador Paranormal", "Praticante de Ocultismo"],
+                associacoes: ["Ordo Realitas", "Equipe Demolição"],
+                aparece_em: ["Orfanato de Sussurros", "Obsessão"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/8/80/Portrait_-_Malena_Abramelo_%28Obsess%C3%A3o%29.png/revision/latest/scale-to-width-down/268?cb=20250721164126&path-prefix=pt-br"
+            },
+            {
+                id: 28,
+                nome: "Arthur Gammel Angel",
+                frase: "...",
+                idade: 24,
+                genero: "Masculino",
+                status: "Desconhecido",
+                elemento: "Conhecimento",
+                classe: "Ocultista",
+                origem: "Cultista Arrependido",
+                trilha: "Exorcista",
+                ocupacoes: ["Detetive", "Esoterrorista", "Investigador Paranormal", "Praticante de Ocultismo"],
+                associacoes: ["O Soberano", "Culto aos Insondáveis", "Ordo Veritatis", "Ordo Realitas", "Equipe Manobra de Combate"],
+                aparece_em: ["Posessão do Ódio"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/9/93/Arthur_Angel_-_Portrait.png/revision/latest/scale-to-width-down/268?cb=20241124085145&path-prefix=pt-br"
+            },
+            {
+                id: 29,
+                nome: "Clyde",
+                frase: "...",
+                idade: 20,
+                genero: "Masculino",
+                status: "Desconhecido",
+                elemento: "Energia",
+                classe: "Ocultista",
+                origem: "Universitário",
+                trilha: "Carcereiro",
+                ocupacoes: ["Universitário", "Investigador Paranormal", "Praticante de Ocultismo"],
+                associacoes: ["Ordo Veritatis", "Ordo Realitas", "Equipe Manobra de Combate"],
+                aparece_em: ["Posessão do Ódio"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/8/80/Clyde_-_Portrait.png/revision/latest/scale-to-width-down/268?cb=20241124092015&path-prefix=pt-br"
+            },
+            {
+                id: 30,
+                nome: "Jony Constantinopla",
+                frase: "...",
+                idade: 25,
+                genero: "Masculino",
+                status: "Desconhecido",
+                elemento: null,
+                classe: "Combatente",
+                origem: "Lutador",
+                trilha: "Pugilista",
+                ocupacoes: ["Lutador", "Investigador Paranormal"],
+                associacoes: ["Ordo Veritatis", "Ordo Realitas", "Equipe Manobra de Combate"],
+                aparece_em: ["Posessão do Ódio"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/e/e5/Jony_Constantinopla_-_Portrait.png/revision/latest/scale-to-width-down/268?cb=20241124091502&path-prefix=pt-br"
+            },
+            {
+                id: 31,
+                nome: "Pedro Oliveira da Silva",
+                frase: "...",
+                idade: 25,
+                genero: "Masculino",
+                status: "Desconhecido",
+                elemento: null,
+                classe: "Combatente",
+                origem: "Atleta",
+                trilha: "Aniquilador",
+                ocupacoes: ["Atleta", "Arqueiro", "Investigador Paranormal"],
+                associacoes: ["Ordo Veritatis", "Ordo Realitas", "Equipe Manobra de Combate"],
+                aparece_em: ["Posessão do Ódio"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/1/1b/Pedro_O_Silva_-_Portrait.png/revision/latest/scale-to-width-down/268?cb=20241125111745&path-prefix=pt-br"
+            },
+            {
+                id: 32,
+                nome: "Enzo Rocha dos Santos",
+                frase: "...",
+                idade: 24,
+                genero: "Masculino",
+                status: "Vivo",
+                elemento: null,
+                classe: "Combatente",
+                origem: "Atleta",
+                trilha: "Gladiador Paranormal",
+                ocupacoes: ["Atleta", "Jogador de Flag Football", "Investigador Paranormal", "Praticante de Ocultismo"],
+                associacoes: ["Seleção Brasileira" , "Ordo Realitas", "Equipe Gonçalo"],
+                aparece_em: ["Fumaça Púrpura", "Canção do Mar"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/a/ac/Enzo_Rocha_-_Portrait_V2.png/revision/latest/scale-to-width-down/268?cb=20260131072631&path-prefix=pt-br"
+            },
+            {
+                id: 33,
+                nome: "Marcos Dornelles Penha",
+                frase: "...",
+                idade: 20,
+                genero: "Masculino",
+                status: "Vivo",
+                elemento: null,
+                classe: "Combatente",
+                origem: "Colegial",
+                trilha: "Pugilista",
+                ocupacoes: ["Estudante", "Mecânico", "Investigador Paranormal"],
+                associacoes: ["Ordo Realitas", "Equipe Gonçalo"],
+                aparece_em: ["Fumaça Púrpura", "Canção do Mar"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/f/fd/Marcos_Penha_-_Portrait.png/revision/latest/scale-to-width-down/268?cb=20251207075350&path-prefix=pt-br"
+            },
+            {
+                id: 34,
+                nome: "Miguel Gonçalo",
+                frase: "...",
+                idade: 25,
+                genero: "Masculino",
+                status: "Vivo",
+                elemento: null,
+                classe: "Especialista",
+                origem: "Armeiro",
+                trilha: "Atirador de Elite",
+                ocupacoes: ["Agente Federal", "Armeiro", "Investigador Paranormal"],
+                associacoes: ["Ordo Realitas", "Equipe Gonçalo"],
+                aparece_em: ["Fumaça Púrpura", "Canção do Mar"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/6/60/Miguel_Gon%C3%A7alo_-_Portrait.png/revision/latest/scale-to-width-down/268?cb=20251207080213&path-prefix=pt-br"
+            },
+            {
+                id: 35,
+                nome: "Rafael Dornelles",
+                frase: "...",
+                idade: 30,
+                genero: "Masculino",
+                status: "Vivo",
+                elemento: null,
+                classe: "Ocultista",
+                origem: "Acadêmico",
+                trilha: "Amaldiçoado de Sangue",
+                ocupacoes: ["Pesquisador", "Geólogo", "Investigador Paranormal", "Praticante de Ocultismo"],
+                associacoes: ["Ordo Realitas", "Equipe Gonçalo"],
+                aparece_em: ["Fumaça Púrpura", "Canção do Mar"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/8/82/Rafael_Dornelles_-_Portrait.png/revision/latest/scale-to-width-down/268?cb=20251207081552&path-prefix=pt-br"
+            },
+            {
+                id: 36,
+                nome: "Bill Sabor",
+                frase: "Não se preocupe, todos renascerão na terra rubra.",
+                idade: 41,
+                genero: "Masculino",
+                status: "Falecido",
+                elemento: null,
+                classe: null,
+                origem: "Ocultista",
+                trilha: null,
+                ocupacoes: ["Ocultista", "Morador de Rua"],
+                associacoes: ["Clube de Investigação", "Bruxa Rubra"],
+                aparece_em: ["A Assombração da Residência Corbitt"],
+                imagem: "hhttps://static.wikia.nocookie.net/ordem-exterminio/images/8/89/Bill_Sabor_-_Portrait.png/revision/latest/scale-to-width-down/268?cb=20241209155235&path-prefix=pt-br"
+            },
+            {
+                id: 37,
+                nome: "Frederick Archiebald",
+                frase: "Devem ser os alienígenas...",
+                idade: 81,
+                genero: "Masculino",
+                status: "Falecido",
+                elemento: null,
+                classe: null,
+                origem: "Fotojornalista",
+                trilha: null,
+                ocupacoes: ["Fotógrafo", "Jornalista", "Teórico da Conspiração"],
+                associacoes: ["Clube de Investigação"],
+                aparece_em: ["A Assombração da Residência Corbitt"],
+                imagem: "hhttps://static.wikia.nocookie.net/ordem-exterminio/images/6/6c/Frederick_Archiebald_-_Portrait.jpg/revision/latest/scale-to-width-down/268?cb=20241209190305&path-prefix=pt-br"
+            },
+            {
+                id: 38,
+                nome: "Jeremy Scott",
+                frase: "MORRE LOGO!!!",
+                idade: 26,
+                genero: "Masculino",
+                status: "Falecido",
+                elemento: null,
+                classe: null,
+                origem: "Criminoso",
+                trilha: null,
+                ocupacoes: ["Assaltante", "Criminoso", "Vándalo"],
+                associacoes: ["Clube de Investigação"],
+                aparece_em: ["A Assombração da Residência Corbitt"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/1/1b/Jeremy_Scott_-_Portrait.jpeg/revision/latest/scale-to-width-down/268?cb=20241209223049&path-prefix=pt-br"
+            },
+            {
+                id: 39,
+                nome: "Thomaz Thompson",
+                frase: "Podem me chamar de Scarface",
+                idade: 36,
+                genero: "Masculino",
+                status: "Falecido",
+                elemento: null,
+                classe: null,
+                origem: "Criminoso",
+                trilha: null,
+                ocupacoes: ["Mafioso", "Criminoso", "Magnata"],
+                associacoes: ["Clube de Investigação"],
+                aparece_em: ["A Assombração da Residência Corbitt"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/1/1a/Thomaz_Thompson_-_Portrait.jpg/revision/latest/scale-to-width-down/268?cb=20241209223254&path-prefix=pt-br"
+            },
+            {
+                id: 40,
+                nome: "Kai",
+                frase: "...",
+                idade: 25,
+                genero: "Masculino",
+                status: "Falecido",
+                elemento: null,
+                classe: "Sobrevivente",
+                origem: "Amante dos Animais",
+                trilha: "Esotérico",
+                ocupacoes: ["Explorador", "Eremita", "Adestrador"],
+                associacoes: null,
+                aparece_em: ["Mina Negra"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/b/b2/Kai_-_Portrait.png/revision/latest/scale-to-width-down/268?cb=20240615043315&path-prefix=pt-br"
+            },
+            {
+                id: 41,
+                nome: "Lamar Demeatrice Jackson",
+                frase: "...",
+                idade: 25,
+                genero: "Masculino",
+                status: "Vivo",
+                elemento: null,
+                classe: "Sobrevivente",
+                origem: "Legista do Turno Noturno",
+                trilha: "Esperto",
+                ocupacoes: ["Médico", "Legista"],
+                associacoes: null,
+                aparece_em: ["Mina Negra"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/7/7b/Lamar_Jackson_-_Portrait.png/revision/latest/scale-to-width-down/268?cb=20240615043359&path-prefix=pt-br"
+            },
+            {
+                id: 42,
+                nome: "Leandro Messum",
+                frase: "...",
+                idade: 26,
+                genero: "Masculino",
+                status: "Vivo",
+                elemento: null,
+                classe: "Sobrevivente",
+                origem: "Trambiqueiro",
+                trilha: "Esperto",
+                ocupacoes: ["Comerciante", "Charlatão"],
+                associacoes: null,
+                aparece_em: ["Mina Negra"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/b/b5/Leandro_Messum_-_Portrait.png/revision/latest/scale-to-width-down/268?cb=20240615043641&path-prefix=pt-br"
+            },
+            {
+                id: 43,
+                nome: "Marcius Messum",
+                frase: "...",
+                idade: 27,
+                genero: "Masculino",
+                status: "Vivo",
+                elemento: null,
+                classe: "Sobrevivente",
+                origem: "Diplomata",
+                trilha: "Esperto",
+                ocupacoes: ["Comerciante", "Negociante"],
+                associacoes: null,
+                aparece_em: ["Mina Negra"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/6/64/Marcius_Messum_-_Portrait.png/revision/latest/scale-to-width-down/268?cb=20240615043716&path-prefix=pt-br"
+            },
+            {
+                id: 44,
+                nome: "Alexandre Peixoto",
+                frase: "...",
+                idade: null,
+                genero: "Masculino",
+                status: "Vivo",
+                elemento: null,
+                classe: "Sobrevivente",
+                origem: "Agente de Saúde",
+                trilha: null,
+                ocupacoes: ["Médico", "Agente de Saúde", "Cirugião", "Neurocirugião"],
+                associacoes: null,
+                aparece_em: ["Noite de Compras"],
+                imagem: "hhttps://static.wikia.nocookie.net/ordem-exterminio/images/5/55/Alexandre_Peixoto_-_Portrait.png/revision/latest/scale-to-width-down/268?cb=20251228090625&path-prefix=pt-br"
+            },
+            {
+                id: 45,
+                nome: "Caio Medeiros",
+                frase: "...",
+                idade: null,
+                genero: "Masculino",
+                status: "Vivo",
+                elemento: null,
+                classe: "Sobrevivente",
+                origem: "Legista do Turno Noturno",
+                trilha: null,
+                ocupacoes: ["Médico", "Agente de Saúde", "Legista"],
+                associacoes: null,
+                aparece_em: ["Noite de Compras"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/f/f5/Miniatura_desconhecida.png/revision/latest?cb=20251208113606&path-prefix=pt-br"
+            },
+            {
+                id: 46,
+                nome: "Diego Bittencourt",
+                frase: "...",
+                idade: null,
+                genero: "Masculino",
+                status: "Falecido",
+                elemento: null,
+                classe: "Sobrevivente",
+                origem: "Policial",
+                trilha: null,
+                ocupacoes: ["Segurança"],
+                associacoes: ["Shopping Center Arcádia"],
+                aparece_em: ["Noite de Compras"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/9/90/Diego_Bittencourt_-_Portrait.png/revision/latest/scale-to-width-down/268?cb=20251228094151&path-prefix=pt-br"
+            },
+            {
+                id: 47,
+                nome: "José Flamingo",
+                frase: "Sei lá, não tenho essa competencia toda.",
+                idade: 28,
+                genero: "Masculino",
+                status: "Vivo",
+                elemento: null,
+                classe: "Sobrevivente",
+                origem: "Criminoso",
+                trilha: null,
+                ocupacoes: ["Criminoso", "Assaltante", "Morador de Rua", "Prisioneiro"],
+                associacoes: ["Cidade de Riopinhal", "Shopping Center Arcádia"],
+                aparece_em: ["Raízes Carmesim", "Noite de Compras"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/e/ec/Jose_Flamingo_%28Noite_de_Compras%29_-_Portrait.png/revision/latest/scale-to-width-down/268?cb=20251228073243&path-prefix=pt-br"
+            },
+            {
+                id: 48,
+                nome: "Sarah Benventana",
+                frase: "...",
+                idade: 17,
+                genero: "Feminino",
+                status: "Vivo",
+                elemento: null,
+                classe: "Sobrevivente",
+                origem: "Artista",
+                trilha: null,
+                ocupacoes: ["Influencer", "Ator"],
+                associacoes: ["Shopping Center Arcádia"],
+                aparece_em: ["Noite de Compras"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/1/18/Sarah_Benventana_-_Portrait.png/revision/latest/scale-to-width-down/268?cb=20251228102922&path-prefix=pt-br"
+            },
+            {
+                id: 49,
+                nome: "Tobias Pinheiro",
+                frase: "...",
+                idade: null,
+                genero: "Masculino",
+                status: "Vivo",
+                elemento: null,
+                classe: "Sobrevivente",
+                origem: "Universitário",
+                trilha: null,
+                ocupacoes: ["Universitário"],
+                associacoes: null,
+                aparece_em: ["Noite de Compras"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/7/74/Tobias_Pinheiro_-_Portrait.png/revision/latest/scale-to-width-down/268?cb=20251228103725&path-prefix=pt-br"
+            },
+            {
+                id: 50,
+                nome: "Arthur Moser",
+                frase: "...",
+                idade: 20,
+                genero: "Masculino",
+                status: "Vivo",
+                elemento: null,
+                classe: null,
+                origem: "Agente Federal",
+                trilha: null,
+                ocupacoes: ["Policial", "Agente Federal"],
+                associacoes: ["FBI"],
+                aparece_em: ["Um Farol na Escuridão"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/3/34/Arthur_Moser_-_Portrait.png/revision/latest/scale-to-width-down/268?cb=20251102141827&path-prefix=pt-br"
+            },
+            {
+                id: 51,
+                nome: "Dante Canario",
+                frase: "...",
+                idade: 40,
+                genero: "Masculino",
+                status: "Falecido",
+                elemento: null,
+                classe: null,
+                origem: "Negociante de Antiguidades",
+                trilha: null,
+                ocupacoes: ["Comerciante", "Negociante", "Contrabandista"],
+                associacoes: null,
+                aparece_em: ["Um Farol na Escuridão"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/b/ba/Dante_Canario_-_Portrait.png/revision/latest/scale-to-width-down/268?cb=20251101082119&path-prefix=pt-br"
+            },
+            {
+                id: 52,
+                nome: "Dante Santoro",
+                frase: "...",
+                idade: null,
+                genero: "Masculino",
+                status: "Vivo",
+                elemento: null,
+                classe: null,
+                origem: "Biólogo Marinho",
+                trilha: null,
+                ocupacoes: ["Biólogo", "Acadêmico"],
+                associacoes: null,
+                aparece_em: ["Um Farol na Escuridão"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/1/1e/Dante_Santoro_-_Portrait.png/revision/latest/scale-to-width-down/267?cb=20251101083725&path-prefix=pt-br"
+            },
+            {
+                id: 53,
+                nome: "Rita Manezzolli",
+                frase: "...",
+                idade: null,
+                genero: "Feminino",
+                status: "Desconhecido",
+                elemento: null,
+                classe: null,
+                origem: "Artista",
+                trilha: null,
+                ocupacoes: ["Artista", "Pintor"],
+                associacoes: null,
+                aparece_em: ["Um Farol na Escuridão"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/9/9d/Rita_Manezzolli_-_Portrait.png/revision/latest/scale-to-width-down/268?cb=20251102142432&path-prefix=pt-br"
+            },
+            {
+                id: 54,
+                nome: "Ignacio",
+                frase: "Acidentes acontecem...",
+                idade: 30,
+                genero: "Desconhecido",
+                status: "Desconhecido",
+                elemento: null,
+                classe: "Combatente",
+                origem: "Ex-Membro da Ordem",
+                trilha: "Aniquilador",
+                ocupacoes: ["Bombeiro", "Mercenário", "Investigador Paranormal"],
+                associacoes: ["Ordo Realitas", "Equipe Centelha"],
+                aparece_em: ["Feliz Ano Novo"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/b/b0/Ignacio_-_Portrait.png/revision/latest/scale-to-width-down/268?cb=20250728044911&path-prefix=pt-br"
+            },
+            {
+                id: 55,
+                nome: "Enzo Almeida Vasconcelos",
+                frase: "...",
+                idade: 10,
+                genero: "Masculino",
+                status: "Falecido",
+                elemento: null,
+                classe: "Combatente",
+                origem: "Policial",
+                trilha: "Operações Especiais",
+                ocupacoes: ["Policial", "Infiltrado", "Investigador Paranormal"],
+                associacoes: ["Ordo Realitas"],
+                aparece_em: null,
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/f/f5/Miniatura_desconhecida.png/revision/latest/scale-to-width-down/150?cb=20251208113606&path-prefix=pt-br"
+            },
+            {
+                id: 56,
+                nome: "Marina Vega dos Santos",
+                frase: "...",
+                idade: 32,
+                genero: "Feminino",
+                status: "Vivo",
+                elemento: null,
+                classe: "Especialista",
+                origem: "Blaster",
+                trilha: "Técnico",
+                ocupacoes: ["Técnico", "Engenheiro", "Militar", "Capitão", "Piloto", "Investigador Paranormal"],
+                associacoes: ["Exercíto Brasileiro", "Ordo Realitas"],
+                aparece_em: ["Canção do Mar"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/a/a2/Marina_Vega_dos_Santos_-_Portrait.png/revision/latest/scale-to-width-down/268?cb=20241201085157&path-prefix=pt-br"
+            },
+            {
+                id: 57,
+                nome: "Mauro Nunes",
+                frase: "Não mexa com os homi",
+                idade: 30,
+                genero: "Masculino",
+                status: "Vivo",
+                elemento: null,
+                classe: "Combatente",
+                origem: "Atleta",
+                trilha: null,
+                ocupacoes: ["Personal Trainer", "Lutador", "Atleta", "Investigador Paranormal"],
+                associacoes: ["Ordo Realitas", "Equipe M"],
+                aparece_em: ["Os Espinhos da Aurora Escarlate"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/9/95/Portrait_-_Mauro_Nutes.png/revision/latest/scale-to-width-down/268?cb=20241116215049&path-prefix=pt-br"
+            },
+            {
+                id: 58,
+                nome: "Sofia Fujisaki",
+                frase: "Home Run!",
+                idade: 20,
+                genero: "Feminino",
+                status: "Vivo",
+                elemento: null,
+                classe: "Especialista",
+                origem: "Atleta",
+                trilha: "Detetive Paranormal",
+                ocupacoes: ["Atleta", "Jogador", "Investigador Paranormal"],
+                associacoes: ["Seleção Brasileira", "Ordo Realitas", "Equipe Resiliência"],
+                aparece_em: ["Fumaça Púrpura"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/2/2d/Sofia_Fujisaki_V2_-_Portrait.png/revision/latest/scale-to-width-down/268?cb=20251207184512&path-prefix=pt-br"
+            },
+            {
+                id: 59,
+                nome: "Alvaro Caires",
+                frase: "...",
+                idade: 40,
+                genero: "Masculino",
+                status: "Vivo",
+                elemento: null,
+                classe: "Ocultista",
+                origem: "Psicólogo",
+                trilha: "Parapsicólogo",
+                ocupacoes: ["Psicólogo", "Cultista", "Praticante de Ocultismo"],
+                associacoes: ["Tríade"],
+                aparece_em: ["Obsessão"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/6/6a/Alvaro_Caires_-_Portrait.png/revision/latest/scale-to-width-down/268?cb=20250727050156&path-prefix=pt-br"
+            },
+            {
+                id: 60,
+                nome: "Johann Matadero",
+                frase: "...",
+                idade: 40,
+                genero: "Masculino",
+                status: "Desconhecido",
+                elemento: "Sangue",
+                classe: "Ocultista",
+                origem: "Chef",
+                trilha: "Flagelador",
+                ocupacoes: ["Chef", "Cultista", "Praticante de Ocultismo"],
+                associacoes: ["Frigoríferos Matadero Ltda."],
+                aparece_em: null,
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/9/91/Miniatura_-_Johann_%22Flanbout%22.png/revision/latest/scale-to-width-down/268?cb=20240430204940&path-prefix=pt-br"
+            },
+            {
+                id: 61,
+                nome: "Hades",
+                frase: "Au au au",
+                idade: null,
+                genero: "Masculino",
+                status: "Vivo",
+                elemento: null,
+                classe: null,
+                origem: null,
+                trilha: null,
+                ocupacoes: ["Mascote"],
+                associacoes: ["Ordem Realitas", "Equipe Hades"],
+                aparece_em: ["Raízes Carmesim", "Raízes Sombrias"],
+                imagem: "https://static.wikia.nocookie.net/ordem-exterminio/images/c/c7/Hades_-_Perfil.png/revision/latest/scale-to-width-down/268?cb=20240323203653&path-prefix=pt-br"
+            }
+        ];
+
+        const MAX_LIVES = 10;
+        let targetCharacter = null;
+        let livesLeft = MAX_LIVES;
+        let isGameOver = false;
+        let guesses = [];
+        let gameWon = false;
+
+        const inputEl = document.getElementById('guessInput');
+        const guessBtn = document.getElementById('guessBtn');
+        const suggestionsEl = document.getElementById('suggestionsList');
+        const guessesContainer = document.getElementById('guessesContainer');
+        const livesContainer = document.getElementById('livesContainer');
+        const targetImageContainer = document.getElementById('targetImageContainer');
+        const targetNameReveal = document.getElementById('targetNameReveal');
+        const endModal = document.getElementById('endModal');
+        const dateDisplay = document.getElementById('dateDisplay');
+        const successBanner = document.getElementById('successBanner');
+        const copyBtn = document.getElementById('copyBtn');
+
+        function getTodayString() {
+            const d = new Date();
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function formatDateDisplay() {
+            const d = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            return d.toLocaleDateString('pt-BR', options);
+        }
+
+        function getDateSeed(dateString) {
+            let seed = 0;
+            for (let i = 0; i < dateString.length; i++) {
+                seed = ((seed << 5) - seed) + dateString.charCodeAt(i);
+                seed = seed & seed;
+            }
+            return Math.abs(seed);
+        }
+
+        function selectDailyCharacter() {
+            const today = getTodayString();
+            const specialDates = {
+        '2026-02-18': 27,  // 18/02/2026 → ID 27
+        '2025-12-25': 1,   // Exemplo: Natal → ID 1
+        '2025-10-31': 7,   // Exemplo: Halloween → ID 7
+    };
+    
+    // Verifica se é uma data especial
+    if (specialDates[today]) {
+        const forcedChar = CHARACTER_DATABASE.find(c => c.id === specialDates[today]);
+        if (forcedChar) return forcedChar;
+    }
+    
+    // === SELEÇÃO NORMAL (Aleatória baseada na data) ===
+    const seed = getDateSeed(today);
+    const index = seed % CHARACTER_DATABASE.length;
+    return CHARACTER_DATABASE[index];
+}
+
+        function initLives() {
+            livesContainer.innerHTML = '';
+            for (let i = 0; i < MAX_LIVES; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'life-bar';
+                bar.id = `life-${i}`;
+                livesContainer.appendChild(bar);
+            }
+        }
+
+        function updateLivesDisplay() {
+            for (let i = 0; i < MAX_LIVES; i++) {
+                const bar = document.getElementById(`life-${i}`);
+                if (i >= livesLeft) {
+                    bar.classList.add('lost');
+                } else {
+                    bar.classList.remove('lost');
+                }
+            }
+        }
+
+        function init() {
+            dateDisplay.textContent = formatDateDisplay();
+            initLives();
+            loadState();
+            
+            if (!targetCharacter) {
+                targetCharacter = selectDailyCharacter();
+                saveState();
+            }
+            
+            renderTargetPlaceholder();
+            
+            inputEl.addEventListener('input', handleInput);
+            inputEl.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    submitGuess();
+                }
+            });
+
+            guessBtn.addEventListener('click', submitGuess);
+            copyBtn.addEventListener('click', copyResults);
+
+            document.addEventListener('click', (e) => {
+                if (!inputEl.contains(e.target) && !suggestionsEl.contains(e.target)) {
+                    suggestionsEl.classList.remove('active');
+                }
+            });
+        }
+
+        
+        function closeModal() {
+            endModal.classList.remove('open');
+        }
+        
+
+        function renderTargetPlaceholder() {
+            targetImageContainer.innerHTML = `<div style="font-size:4rem; color:#333;">?</div>`;
+            targetImageContainer.classList.remove('target-image-correct', 'target-image-wrong');
+            targetNameReveal.style.display = 'none';
+        }
+
+        function revealTarget(won) {
+            targetImageContainer.innerHTML = `<img src="${targetCharacter.imagem}" class="target-image-revealed" alt="${targetCharacter.nome}">`;
+            targetNameReveal.textContent = targetCharacter.nome;
+            targetNameReveal.style.display = 'block';
+            
+            if (won) {
+                targetImageContainer.classList.add('target-image-correct');
+            } else {
+                targetImageContainer.classList.add('target-image-wrong');
+            }
+        }
+
+        function handleInput(e) {
+            const val = e.target.value.toLowerCase();
+            suggestionsEl.innerHTML = '';
+            
+            if (val.length < 1) {
+                suggestionsEl.classList.remove('active');
+                return;
+            }
+
+            const matches = CHARACTER_DATABASE.filter(c => 
+                c.nome.toLowerCase().includes(val)
+            );
+
+            if (matches.length > 0) {
+                suggestionsEl.classList.add('active');
+                matches.forEach(char => {
+                    const div = document.createElement('div');
+                    div.className = 'suggestion-item';
+                    div.dataset.id = char.id;
+                    div.innerHTML = `
+                        <span>${char.nome}</span>
+                        <span style="color: #666; font-size: 0.8rem;">${char.classe || ''}</span>
+                    `;
+                    div.addEventListener('click', () => {
+                        inputEl.value = char.nome;
+                        suggestionsEl.classList.remove('active');
+                    });
+                    suggestionsEl.appendChild(div);
+                });
+            } else {
+                suggestionsEl.classList.remove('active');
+            }
+        }
+
+        function submitGuess() {
+            if (isGameOver) return;
+
+            const inputVal = inputEl.value.trim();
+            if (!inputVal) {
+                showToast('Digite um nome!');
+                return;
+            }
+
+            const char = CHARACTER_DATABASE.find(c => c.nome.toLowerCase() === inputVal.toLowerCase());
+            if (!char) {
+                showToast('Personagem não encontrado!');
+                inputEl.value = '';
+                return;
+            }
+
+            if (guesses.some(g => g.id === char.id)) {
+                showToast('Você já chutou este personagem!');
+                inputEl.value = '';
+                return;
+            }
+
+            executeGuess(char);
+            inputEl.value = '';
+            suggestionsEl.classList.remove('active');
+        }
+
+        function executeGuess(guessChar) {
+            guesses.push(guessChar);
+            livesLeft--;
+            updateLivesDisplay();
+            saveState();
+
+            const card = createGuessCard(guessChar);
+            guessesContainer.prepend(card);
+
+            if (guessChar.id === targetCharacter.id) {
+                gameWon = true;
+                successBanner.style.display = 'block';
+                endGame(true);
+            } else if (livesLeft === 0) {
+                gameWon = false;
+                endGame(false);
+            }
+        }
+
+        function createGuessCard(guess) {
+            const card = document.createElement('div');
+            card.className = 'guess-card';
+
+            const isCorrect = guess.id === targetCharacter.id;
+            
+            const imageHtml = `
+                <div class="guess-image-container">
+                    <img src="${guess.imagem}" class="guess-image ${isCorrect ? 'correct' : 'wrong'}" alt="${guess.nome}">
+                    <div class="guess-result-icon ${isCorrect ? 'correct' : 'wrong'}">
+                        ${isCorrect ? '✓' : '✕'}
+                    </div>
+                </div>
+            `;
+
+            const headerHtml = `
+                <div class="guess-header">
+                    <span class="guess-name">${guess.nome}</span>
+                </div>
+                ${guess.frase ? `<span class="guess-quote">"${guess.frase}"</span>` : ''}
+            `;
+
+            const createTag = (label, userVal, targetVal, type = 'single') => {
+                if (!userVal && !targetVal) return '';
+                
+                let displayVal = userVal;
+                let icon = '✕';
+                let statusClass = 'absent';
+
+                if (type === 'single') {
+                    if (label === 'Idade') {
+                        if (!userVal || !targetVal) {
+                            statusClass = 'unknown';
+                            icon = '?';
+                            displayVal = userVal || 'N/A';
+                        } else if (userVal === targetVal) {
+                            statusClass = 'correct';
+                            icon = '✓';
+                        } else if (targetVal > userVal) {
+                            statusClass = 'absent';
+                            icon = '↑'; 
+                        } else {
+                            statusClass = 'absent';
+                            icon = '↓'; 
+                        }
+                    } else {
+                        if (userVal && targetVal) {
+                            if (String(userVal).toLowerCase() === String(targetVal).toLowerCase()) {
+                                statusClass = 'correct';
+                                icon = '✓';
+                            }
+                        } else if (!userVal && !targetVal) {
+                            statusClass = 'unknown';
+                            icon = '-';
+                            displayVal = 'N/A';
+                        } else if (!userVal && targetVal) {
+                            statusClass = 'absent';
+                            displayVal = 'N/A';
+                        } else if (userVal && !targetVal) {
+                            statusClass = 'absent';
+                        }
+                    }
+                } else if (type === 'array') {
+                    if (targetVal && targetVal.includes(userVal)) {
+                        statusClass = 'correct';
+                        icon = '✓';
+                    } else {
+                        statusClass = 'absent';
+                        icon = '✕';
+                    }
+                }
+
+                if (!displayVal) return '';
+
+                return `
+                    <span class="tag ${statusClass}">
+                        <span class="tag-icon">${icon}</span> 
+                        ${displayVal}
+                    </span>
+                `;
+            };
+
+            const singleAttrs = [
+                { key: 'idade', label: 'Idade' },
+                { key: 'genero', label: 'Estado' },
+                { key: 'elemento', label: 'Elemento' },
+                { key: 'classe', label: 'Classe' },
+                { key: 'origem', label: 'Origem' },
+                { key: 'trilha', label: 'Trilha' }
+            ];
+
+            let singleAttrsHtml = '<div class="attribute-group">';
+            let hasSingleAttrs = false;
+            
+            singleAttrs.forEach(attr => {
+                const userVal = guess[attr.key];
+                const targetVal = targetCharacter[attr.key];
+                
+                if (userVal) {
+                    hasSingleAttrs = true;
+                    singleAttrsHtml += createTag(attr.label, userVal, targetVal, 'single');
+                }
+            });
+            singleAttrsHtml += '</div>';
+
+            let cardContent = imageHtml + '<div class="guess-info">' + headerHtml;
+
+            if (hasSingleAttrs) {
+                cardContent += `<div class="attribute-section"><div class="group-label">Atributos</div>${singleAttrsHtml}</div>`;
+            }
+
+            if (guess.ocupacoes && guess.ocupacoes.length > 0) {
+                let occHtml = '<div class="attribute-group">';
+                guess.ocupacoes.forEach(occ => {
+                    occHtml += createTag('Ocupação', occ, targetCharacter.ocupacoes, 'array');
+                });
+                occHtml += '</div>';
+                cardContent += `<div class="attribute-section"><div class="group-label">Ocupações</div>${occHtml}</div>`;
+            }
+
+            if (guess.associacoes && guess.associacoes.length > 0) {
+                let assocHtml = '<div class="attribute-group">';
+                guess.associacoes.forEach(assoc => {
+                    assocHtml += createTag('Associação', assoc, targetCharacter.associacoes, 'array');
+                });
+                assocHtml += '</div>';
+                cardContent += `<div class="attribute-section"><div class="group-label">Associado a</div>${assocHtml}</div>`;
+            }
+
+            if (guess.aparece_em && guess.aparece_em.length > 0) {
+                let appHtml = '<div class="attribute-group">';
+                guess.aparece_em.forEach(app => {
+                    appHtml += createTag('Aparece em', app, targetCharacter.aparece_em, 'array');
+                });
+                appHtml += '</div>';
+                cardContent += `<div class="attribute-section"><div class="group-label">Aparece em</div>${appHtml}</div>`;
+            }
+
+            cardContent += '</div>';
+            card.innerHTML = cardContent;
+
+            return card;
+        }
+
+        function endGame(won) {
+            isGameOver = true;
+            saveState();
+            revealTarget(won);
+            
+            setTimeout(() => {
+                const title = document.getElementById('endTitle');
+                const msg = document.getElementById('endMessage');
+                const modalImage = document.getElementById('modalImage');
+                
+                if (won) {
+                    title.textContent = "PARABÉNS!";
+                    title.className = "modal-title correct";
+                    msg.textContent = `Você descobriu que o personagem era ${targetCharacter.nome}!`;
+                } else {
+                    title.textContent = "FIM DE JOGO";
+                    title.className = "modal-title wrong";
+                    msg.textContent = `O personagem era ${targetCharacter.nome}.`;
+                }
+
+                modalImage.src = targetCharacter.imagem;
+                
+                endModal.classList.add('open');
+            }, 1000);
+        }
+
+        function copyResults() {
+            const attempts = MAX_LIVES - livesLeft;
+            const result = gameWon ? '✅ Acertei' : '❌ Não acertei';
+            const url = window.location.href;
+            
+            const shareText = `${result} o personagem do dia no #Exterdle em ${attempts} tentativas! ${url}`;
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(shareText).then(() => {
+                showToast('Resultado copiado! Cole com Ctrl+V');
+                
+                // Visual feedback on button
+                const originalText = copyBtn.innerHTML;
+                copyBtn.innerHTML = '✓ Copiado!';
+                copyBtn.style.background = '#1b5e20';
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalText;
+                    copyBtn.style.background = '';
+                }, 2000);
+            }).catch(() => {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = shareText;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showToast('Resultado copiado! Cole com Ctrl+V');
+            });
+        }
+
+        function showToast(msg) {
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
+        }
+
+        function saveState() {
+            const state = {
+                targetId: targetCharacter.id,
+                targetDate: getTodayString(),
+                guesses: guesses.map(g => g.id),
+                livesLeft: livesLeft,
+                gameWon: gameWon
+            };
+            localStorage.setItem('exterdle_state_v6', JSON.stringify(state));
+        }
+
+        function loadState() {
+            const saved = localStorage.getItem('exterdle_state_v6');
+            if (saved) {
+                const state = JSON.parse(saved);
+                
+                if (state.targetDate !== getTodayString()) {
+                    localStorage.removeItem('exterdle_state_v6');
+                    return;
+                }
+                
+                targetCharacter = CHARACTER_DATABASE.find(c => c.id === state.targetId);
+                livesLeft = state.livesLeft;
+                gameWon = state.gameWon || false;
+                updateLivesDisplay();
+
+                state.guesses.forEach(id => {
+                    const char = CHARACTER_DATABASE.find(c => c.id === id);
+                    if (char) {
+                        const card = createGuessCard(char);
+                        guessesContainer.prepend(card);
+                        guesses.push(char);
+                    }
+                });
+
+                if (state.guesses.includes(targetCharacter.id)) {
+                    isGameOver = true;
+                    successBanner.style.display = 'block';
+                    revealTarget(true);
+                } else if (livesLeft === 0) {
+                    isGameOver = true;
+                    revealTarget(false);
+                }
+            }
+        }
+
+        init();
+
+    </script>
 </body>
 </html>
+
